@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { drillReducer, INITIAL_DRILL_STATE } from '../../src/engine/drillReducer';
-import { computeSessionPosture } from '../../src/engine/postureSummary';
+import { drillReducer, INITIAL_DRILL_STATE } from '@/engine/drillReducer';
+import { computeSessionPosture } from '@/engine/postureSummary';
 
 describe('drillReducer', () => {
   it('handles ANSWER action correctly', () => {

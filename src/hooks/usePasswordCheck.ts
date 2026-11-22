@@ -19,6 +19,16 @@ export interface UsePasswordCheckResult {
 
 const DEFAULT_PASSWORD = PASSWORD_PRESETS[0]?.value ?? 'password123';
 
+function usePasswordGenerator(setPassword: (s: string) => void) {
+  const [generatorLength, setGeneratorLength] = useState<number>(DEFAULT_GENERATED_LENGTH);
+  const generateAndApply = useCallback((): string => {
+    const generated = generatePassword(generatorLength);
+    setPassword(generated);
+    return generated;
+  }, [generatorLength, setPassword]);
+  return { generatorLength, setGeneratorLength, generateAndApply };
+}
+
 /**
  * Hook managing password resilience checking, visibility toggle, and secure generation.
  *
@@ -28,33 +38,15 @@ const DEFAULT_PASSWORD = PASSWORD_PRESETS[0]?.value ?? 'password123';
 export function usePasswordCheck(initialPassword: string = DEFAULT_PASSWORD): UsePasswordCheckResult {
   const [password, setPasswordState] = useState<string>(initialPassword);
   const [isVisible, setIsVisible] = useState<boolean>(false);
-  const [generatorLength, setGeneratorLengthState] = useState<number>(DEFAULT_GENERATED_LENGTH);
+  const { generatorLength, setGeneratorLength, generateAndApply } = usePasswordGenerator(setPasswordState);
 
   const result = useMemo<PasswordAnalysisResult>(() => {
     return analyzePassword(password);
   }, [password]);
 
-  const setPassword = useCallback((value: string) => {
-    setPasswordState(value);
-  }, []);
-
-  const toggleVisibility = useCallback(() => {
-    setIsVisible((prev) => !prev);
-  }, []);
-
-  const applyPreset = useCallback((presetValue: string) => {
-    setPasswordState(presetValue);
-  }, []);
-
-  const setGeneratorLength = useCallback((length: number) => {
-    setGeneratorLengthState(length);
-  }, []);
-
-  const generateAndApply = useCallback((): string => {
-    const generated = generatePassword(generatorLength);
-    setPasswordState(generated);
-    return generated;
-  }, [generatorLength]);
+  const setPassword = useCallback((value: string) => { setPasswordState(value); }, []);
+  const toggleVisibility = useCallback(() => { setIsVisible((prev) => !prev); }, []);
+  const applyPreset = useCallback((presetValue: string) => { setPasswordState(presetValue); }, []);
 
   return {
     password,

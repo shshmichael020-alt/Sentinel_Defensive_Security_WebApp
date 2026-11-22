@@ -10,6 +10,21 @@ export interface UseRovingTabsResult {
 
 const ORDERED_TABS: readonly TabId[] = ['link', 'message', 'password', 'learn'];
 
+function resolveNextTabIndex(key: string, current: number, total: number): number | null {
+  switch (key) {
+    case 'ArrowRight':
+      return (current + 1) % total;
+    case 'ArrowLeft':
+      return (current - 1 + total) % total;
+    case 'Home':
+      return 0;
+    case 'End':
+      return total - 1;
+    default:
+      return null;
+  }
+}
+
 /**
  * Hook providing roving tabindex keyboard navigation and ARIA accessibility for tab navigation.
  * Supports ArrowLeft, ArrowRight, Home, and End keys.
@@ -23,27 +38,14 @@ export function useRovingTabs(defaultTab: TabId = 'link'): UseRovingTabsResult {
   const handleKeyDown = useCallback(
     (event: KeyboardEvent<HTMLElement>) => {
       const currentIndex = ORDERED_TABS.indexOf(activeTab);
-      let nextIndex = currentIndex;
+      const nextIndex = resolveNextTabIndex(event.key, currentIndex, ORDERED_TABS.length);
+      if (nextIndex === null) return;
 
-      if (event.key === 'ArrowRight') {
-        event.preventDefault();
-        nextIndex = (currentIndex + 1) % ORDERED_TABS.length;
-      } else if (event.key === 'ArrowLeft') {
-        event.preventDefault();
-        nextIndex = (currentIndex - 1 + ORDERED_TABS.length) % ORDERED_TABS.length;
-      } else if (event.key === 'Home') {
-        event.preventDefault();
-        nextIndex = 0;
-      } else if (event.key === 'End') {
-        event.preventDefault();
-        nextIndex = ORDERED_TABS.length - 1;
-      }
-
+      event.preventDefault();
       const targetTab = ORDERED_TABS[nextIndex];
       if (targetTab && targetTab !== activeTab) {
         setActiveTab(targetTab);
-        const nextButton = document.getElementById(`tab-${targetTab}`);
-        nextButton?.focus();
+        document.getElementById(`tab-${targetTab}`)?.focus();
       }
     },
     [activeTab],

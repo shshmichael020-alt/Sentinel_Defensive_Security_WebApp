@@ -1,5 +1,8 @@
 import { MAX_EMBEDDED_URLS } from '../constants/limits';
 
+const EMBEDDED_URL_REGEX = /\b(?:https?:\/\/[^\s<>"'{}|\\^`]+|www\.[^\s<>"'{}|\\^`]+)/gi;
+const TRAILING_PUNCT_REGEX = /[.,;:!?]+$/;
+
 /**
  * Safely extracts up to 5 HTTP/HTTPS/WWW URLs embedded inside raw message text without network access.
  *
@@ -7,12 +10,12 @@ import { MAX_EMBEDDED_URLS } from '../constants/limits';
  * @returns Array of unique URL strings found (up to 5).
  */
 export function extractUrls(text: string): string[] {
-  const urlRegex = /\b(?:https?:\/\/[^\s<>"'{}|\\^`]+|www\.[^\s<>"'{}|\\^`]+)/gi;
-  const matches = text.match(urlRegex) ?? [];
+  EMBEDDED_URL_REGEX.lastIndex = 0;
+  const matches = text.match(EMBEDDED_URL_REGEX) ?? [];
   const uniqueUrls: string[] = [];
 
   for (const match of matches) {
-    const cleaned = match.replace(/[.,;:!?]+$/, '');
+    const cleaned = match.replace(TRAILING_PUNCT_REGEX, '');
     if (!uniqueUrls.includes(cleaned)) {
       uniqueUrls.push(cleaned);
     }
@@ -23,3 +26,4 @@ export function extractUrls(text: string): string[] {
 
   return uniqueUrls;
 }
+

@@ -1,5 +1,5 @@
-import type { FC } from 'react';
-import type { Verdict } from '../../types/severity';
+import { memo, type FC } from 'react';
+import type { Verdict } from '@/types/severity';
 import { SeverityPill } from '../common/SeverityPill';
 
 export interface KpiCardProps {
@@ -10,7 +10,7 @@ export interface KpiCardProps {
   readonly customBadgeText?: string | undefined;
 }
 
-export const KpiCard: FC<KpiCardProps> = ({
+export const KpiCard: FC<KpiCardProps> = memo(({
   label,
   value,
   subValue,
@@ -38,4 +38,7 @@ export const KpiCard: FC<KpiCardProps> = ({
       </div>
     </div>
   );
-};
+});
+
+KpiCard.displayName = 'KpiCard';
+

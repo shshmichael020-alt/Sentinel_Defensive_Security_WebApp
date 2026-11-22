@@ -1,6 +1,6 @@
 import type { FC } from 'react';
-import type { UseLinkCheckResult } from '../../hooks/useLinkCheck';
-import { LINK_PRESETS } from '../../constants/presets';
+import type { UseLinkCheckResult } from '@/hooks/useLinkCheck';
+import { LINK_PRESETS } from '@/constants/presets';
 import { PresetChips } from '../common/PresetChips';
 import { RiskGauge } from '../common/RiskGauge';
 import { SeverityPill } from '../common/SeverityPill';

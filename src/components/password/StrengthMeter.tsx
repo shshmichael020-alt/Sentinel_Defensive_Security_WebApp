@@ -1,6 +1,6 @@
-import type { FC } from 'react';
-import type { PasswordStrengthLevel, PasswordStrengthLabel } from '../../types/password';
-import { PASSWORD_STRENGTH_THEME } from '../../constants/theme';
+import { memo, type FC } from 'react';
+import type { PasswordStrengthLevel, PasswordStrengthLabel } from '@/types/password';
+import { PASSWORD_STRENGTH_THEME } from '@/constants/theme';
 import { SeverityPill } from '../common/SeverityPill';
 
 export interface StrengthMeterProps {
@@ -11,7 +11,22 @@ export interface StrengthMeterProps {
 
 const TOTAL_SEGMENTS = 5;
 
-export const StrengthMeter: FC<StrengthMeterProps> = ({ level, label, effectiveEntropy }) => {
+const MeterSegments: FC<{ readonly activeSegments: number; readonly hexText: string }> = ({
+  activeSegments,
+  hexText,
+}) => (
+  <>
+    {Array.from({ length: TOTAL_SEGMENTS }).map((_, idx) => (
+      <div
+        key={idx}
+        className="flex-1 h-full rounded-sm transition-colors duration-300"
+        style={{ backgroundColor: idx < activeSegments ? hexText : '#E2E8F0' }}
+      />
+    ))}
+  </>
+);
+
+export const StrengthMeter: FC<StrengthMeterProps> = memo(({ level, label, effectiveEntropy }) => {
   const activeSegments = level + 1;
   const theme = PASSWORD_STRENGTH_THEME[label];
 
@@ -38,18 +53,10 @@ export const StrengthMeter: FC<StrengthMeterProps> = ({ level, label, effectiveE
         aria-valuetext={label}
         className="flex items-center gap-1.5 h-2.5 w-full"
       >
-        {Array.from({ length: TOTAL_SEGMENTS }).map((_, idx) => {
-          const isFilled = idx < activeSegments;
-          const segmentColor = isFilled ? theme.hexText : '#E2E8F0';
-          return (
-            <div
-              key={idx}
-              className="flex-1 h-full rounded-sm transition-colors duration-300"
-              style={{ backgroundColor: segmentColor }}
-            />
-          );
-        })}
+        <MeterSegments activeSegments={activeSegments} hexText={theme.hexText} />
       </div>
     </div>
   );
-};
+});
+
+StrengthMeter.displayName = 'StrengthMeter';

@@ -1,34 +1,12 @@
 import type { MessageHighlightChunk } from '../types/analysis';
-import type { SignalId } from '../types/signal';
-import { MESSAGE_CATEGORY_RULES } from '../constants/messageRules';
+import { findMessageMatches, type MatchSpan } from './findMessageMatches';
 
-interface MatchSpan {
-  readonly start: number;
-  readonly end: number;
-  readonly signalId: SignalId;
-}
-
-function matchPatternSpans(text: string, pattern: RegExp, signalId: SignalId): MatchSpan[] {
-  const spans: MatchSpan[] = [];
-  const globalRegex = new RegExp(pattern.source, 'gi');
-  let match: RegExpExecArray | null = globalRegex.exec(text);
-  while (match !== null) {
-    if (match[0].length > 0) {
-      spans.push({ start: match.index, end: match.index + match[0].length, signalId });
-    }
-    match = globalRegex.exec(text);
-  }
-  return spans;
-}
-
-function collectSpans(text: string, embeddedUrls: readonly string[]): MatchSpan[] {
-  const spans: MatchSpan[] = [];
-
-  for (const rule of MESSAGE_CATEGORY_RULES) {
-    for (const pattern of rule.patterns) {
-      spans.push(...matchPatternSpans(text, pattern, rule.id));
-    }
-  }
+function collectSpans(
+  text: string,
+  embeddedUrls: readonly string[],
+  categorySpans?: readonly MatchSpan[],
+): MatchSpan[] {
+  const spans: MatchSpan[] = categorySpans ? [...categorySpans] : [...findMessageMatches(text).spans];
 
   for (const url of embeddedUrls) {
     let searchIndex = 0;
@@ -63,15 +41,17 @@ function filterOverlappingSpans(sortedSpans: readonly MatchSpan[]): MatchSpan[] 
  *
  * @param text - The original input text.
  * @param embeddedUrls - URLs extracted from message.
+ * @param categorySpans - Optional precomputed category match spans.
  * @returns Ordered sequence of text chunks.
  */
 export function highlightMessage(
   text: string,
   embeddedUrls: readonly string[] = [],
+  categorySpans?: readonly MatchSpan[],
 ): MessageHighlightChunk[] {
   if (text.length === 0) return [];
 
-  const rawSpans = collectSpans(text, embeddedUrls);
+  const rawSpans = collectSpans(text, embeddedUrls, categorySpans);
   const cleanSpans = filterOverlappingSpans(rawSpans);
 
   const chunks: MessageHighlightChunk[] = [];

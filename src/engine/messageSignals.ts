@@ -6,9 +6,13 @@ import {
   SHOUTING_MIN_WORD_LENGTH,
   SHOUTING_EXCLAMATION_THRESHOLD,
   EVIDENCE_MAX_LENGTH,
-  TOP_SIGNALS_COUNT,
 } from '../constants/limits';
-import { MESSAGE_CATEGORY_RULES, type MessageCategoryRule } from '../constants/messageRules';
+import { MESSAGE_CATEGORY_RULES } from '../constants/messageRules';
+import { findMessageMatches, type MessageScanResult } from './findMessageMatches';
+
+const EXCLAMATION_REGEX = /!/g;
+const NON_LETTER_REGEX = /[^a-zA-Z]/g;
+const WHITESPACE_SPLIT_REGEX = /\s+/;
 
 const SEVERITY_BY_CATEGORY: Readonly<Record<MessageSignalId, Severity>> = {
   credential_request: 'critical',
@@ -25,20 +29,26 @@ const SEVERITY_BY_CATEGORY: Readonly<Record<MessageSignalId, Severity>> = {
   pressure_combo: 'high',
 };
 
-function checkShouting(text: string): Signal | null {
-  const exclamationMatches = text.match(/!/g) ?? [];
-  const hasManyExclamations = exclamationMatches.length >= SHOUTING_EXCLAMATION_THRESHOLD;
-
-  const words = text.split(/\s+/).filter((w) => w.length >= SHOUTING_MIN_WORD_LENGTH);
-  let upperCount = 0;
+function countUppercaseWords(words: readonly string[]): number {
+  let count = 0;
   for (const word of words) {
-    const letters = word.replace(/[^a-zA-Z]/g, '');
+    const letters = word.replace(NON_LETTER_REGEX, '');
     if (letters.length >= SHOUTING_MIN_WORD_LENGTH && letters === letters.toUpperCase()) {
-      upperCount += 1;
+      count += 1;
     }
   }
+  return count;
+}
 
+function checkShouting(text: string): Signal | null {
+  EXCLAMATION_REGEX.lastIndex = 0;
+  const exclamationMatches = text.match(EXCLAMATION_REGEX) ?? [];
+  const hasManyExclamations = exclamationMatches.length >= SHOUTING_EXCLAMATION_THRESHOLD;
+
+  const words = text.split(WHITESPACE_SPLIT_REGEX).filter((w) => w.length >= SHOUTING_MIN_WORD_LENGTH);
+  const upperCount = countUppercaseWords(words);
   const isShouting = words.length > 0 && upperCount / words.length > SHOUTING_UPPERCASE_RATIO;
+
   if (hasManyExclamations || isShouting) {
     const ev = `Upper words: ${String(upperCount)}/${String(words.length)}, ! count: ${String(exclamationMatches.length)}`;
     return {
@@ -51,6 +61,8 @@ function checkShouting(text: string): Signal | null {
   }
   return null;
 }
+
+
 
 /**
  * Maps link analysis verdict to message embedded link severity.
@@ -65,30 +77,23 @@ export function mapLinkVerdictToSeverity(verdict: Verdict): Severity | null {
   return null;
 }
 
-function matchPhrases(text: string, rule: MessageCategoryRule): string[] {
-  const matched: string[] = [];
-  for (const pattern of rule.patterns) {
-    const match = pattern.exec(text);
-    if (match?.[0] && !matched.includes(match[0].toLowerCase())) {
-      matched.push(match[0]);
-    }
-    if (matched.length >= TOP_SIGNALS_COUNT) break;
-  }
-  return matched;
-}
-
 /**
  * Scans text against category regexes and stylistic heuristic rules.
  *
  * @param text - The message text.
+ * @param precomputedMatches - Optional precomputed regex matches.
  * @returns Detected message signals.
  */
-export function extractMessageCategorySignals(text: string): Signal[] {
+export function extractMessageCategorySignals(
+  text: string,
+  precomputedMatches?: MessageScanResult,
+): Signal[] {
+  const scan = precomputedMatches ?? findMessageMatches(text);
   const signals: Signal[] = [];
 
   for (const rule of MESSAGE_CATEGORY_RULES) {
-    const matchedPhrases = matchPhrases(text, rule);
-    if (matchedPhrases.length > 0) {
+    const matchedPhrases = scan.phrasesByRule.get(rule.id);
+    if (matchedPhrases && matchedPhrases.length > 0) {
       signals.push({
         id: rule.id,
         severity: SEVERITY_BY_CATEGORY[rule.id],
@@ -106,6 +111,7 @@ export function extractMessageCategorySignals(text: string): Signal[] {
 
   return signals;
 }
+
 
 /**
  * Applies compound threat rule: urgency/threat paired with payment/credential/risky link demands.

@@ -1,6 +1,6 @@
 import type { FC } from 'react';
-import type { Severity, Verdict } from '../../types/severity';
-import { useExplain } from '../../hooks/useExplain';
+import type { Severity, Verdict } from '@/types/severity';
+import { useExplain } from '@/hooks/useExplain';
 import { RefreshCw, Sparkles, CheckCircle2 } from 'lucide-react';
 
 export interface ExplainPanelProps {
@@ -27,6 +27,27 @@ const ExplainResultBox: FC<{ readonly text: string; readonly source: 'ai' | 'fal
   </div>
 );
 
+const ExplainTriggerButton: FC<{ readonly isLoading: boolean; readonly onClick: () => void }> = ({
+  isLoading,
+  onClick,
+}) => (
+  <button
+    type="button"
+    onClick={onClick}
+    disabled={isLoading}
+    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-white border border-slate-300 text-sentinel-ink hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-blue-600 transition-colors disabled:opacity-50"
+  >
+    {isLoading ? (
+      <>
+        <RefreshCw size={12} className="animate-spin text-blue-600" aria-hidden="true" />
+        <span>Analyzing signals...</span>
+      </>
+    ) : (
+      <span>Explain in plain language</span>
+    )}
+  </button>
+);
+
 export const ExplainPanel: FC<ExplainPanelProps> = ({ kind, score, verdict, signals }) => {
   const { explanation, source, isLoading, requestExplanation } = useExplain();
 
@@ -37,21 +58,10 @@ export const ExplainPanel: FC<ExplainPanelProps> = ({ kind, score, verdict, sign
           <Sparkles size={14} className="text-blue-600" aria-hidden="true" />
           <span>Need a simple summary?</span>
         </span>
-        <button
-          type="button"
+        <ExplainTriggerButton
+          isLoading={isLoading}
           onClick={() => { void requestExplanation(kind, score, verdict, signals); }}
-          disabled={isLoading}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-white border border-slate-300 text-sentinel-ink hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-blue-600 transition-colors disabled:opacity-50"
-        >
-          {isLoading ? (
-            <>
-              <RefreshCw size={12} className="animate-spin text-blue-600" aria-hidden="true" />
-              <span>Analyzing signals...</span>
-            </>
-          ) : (
-            <span>Explain in plain language</span>
-          )}
-        </button>
+        />
       </div>
 
       <div aria-live="polite">
@@ -60,3 +70,4 @@ export const ExplainPanel: FC<ExplainPanelProps> = ({ kind, score, verdict, sign
     </div>
   );
 };
+

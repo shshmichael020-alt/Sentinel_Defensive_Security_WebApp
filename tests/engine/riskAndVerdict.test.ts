@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { combineRisk } from '../../src/engine/combineRisk';
-import { getVerdictFromScore } from '../../src/engine/verdict';
+import { combineRisk } from '@/engine/combineRisk';
+import { getVerdictFromScore } from '@/engine/verdict';
 
 describe('combineRisk', () => {
   it('returns 0 when signals array is empty', () => {

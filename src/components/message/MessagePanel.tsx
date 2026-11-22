@@ -1,20 +1,38 @@
 import type { FC } from 'react';
-import type { UseMessageCheckResult } from '../../hooks/useMessageCheck';
-import { MESSAGE_MAX_LENGTH } from '../../constants/limits';
-import { MESSAGE_PRESETS } from '../../constants/presets';
-import { PresetChips } from '../common/PresetChips';
+import type { UseMessageCheckResult } from '@/hooks/useMessageCheck';
+import type { MessageAnalysisResult } from '@/types/analysis';
+import { MESSAGE_MAX_LENGTH } from '@/constants/limits';
+import { MESSAGE_PRESETS } from '@/constants/presets';
 import { RiskGauge } from '../common/RiskGauge';
 import { SeverityPill } from '../common/SeverityPill';
-import { HighlightedMessage } from './HighlightedMessage';
 import { SignalList } from '../common/SignalList';
 import { ActionPlan } from '../common/ActionPlan';
+import { PresetChips } from '../common/PresetChips';
 import { ExplainPanel } from '../common/ExplainPanel';
 import { CopyButton } from '../common/CopyButton';
+import { HighlightedMessage } from './HighlightedMessage';
 import { MessageSquareWarning } from 'lucide-react';
 
 export interface MessagePanelProps {
   readonly check: UseMessageCheckResult;
 }
+
+const MessageTextarea: FC<{ readonly input: string; readonly setInput: (v: string) => void }> = ({
+  input,
+  setInput,
+}) => (
+  <textarea
+    id="message-input"
+    rows={4}
+    value={input}
+    maxLength={MESSAGE_MAX_LENGTH}
+    aria-describedby="char-counter"
+    onChange={(e) => { setInput(e.target.value); }}
+    placeholder="Paste suspicious SMS, WhatsApp, or email message..."
+    className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 bg-white font-sans text-xs sm:text-sm text-sentinel-ink focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all leading-relaxed resize-y"
+    spellCheck={false}
+  />
+);
 
 const MessageInputCard: FC<{
   readonly input: string;
@@ -37,23 +55,32 @@ const MessageInputCard: FC<{
       <p className="text-xs text-sentinel-secondary">
         Paste suspicious SMS, WhatsApp, or email text. Extracts and verifies nested links automatically.
       </p>
-      <textarea
-        id="message-input"
-        rows={4}
-        value={input}
-        maxLength={MESSAGE_MAX_LENGTH}
-        aria-describedby="char-counter"
-        onChange={(e) => { setInput(e.target.value); }}
-        placeholder="Paste suspicious SMS, WhatsApp, or email message..."
-        className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 bg-white font-sans text-xs sm:text-sm text-sentinel-ink focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all leading-relaxed resize-y"
-        spellCheck={false}
-      />
+      <MessageTextarea input={input} setInput={setInput} />
     </div>
     <div className="flex items-center justify-between gap-2 flex-wrap">
       <PresetChips presets={MESSAGE_PRESETS} onSelect={applyPreset} currentValue={input} label="Sample Scenarios:" />
       {showWarningBtn && (
         <CopyButton textToCopy={warningShareText} label="Copy Warning to Share" copiedLabel="Warning Copied!" />
       )}
+    </div>
+  </div>
+);
+
+const MessageResultsGrid: FC<{ readonly result: Extract<MessageAnalysisResult, { status: 'ok' }> }> = ({
+  result,
+}) => (
+  <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+    <div className="lg:col-span-4 flex flex-col gap-4 p-5 rounded-xl border border-sentinel-border bg-white shadow-sm items-center">
+      <RiskGauge score={result.score} verdict={result.verdict} label="Message Risk" />
+      <SeverityPill verdict={result.verdict} size="md" />
+      <div className="w-full mt-2">
+        <ExplainPanel kind="message" score={result.score} verdict={result.verdict} signals={result.signals} />
+      </div>
+    </div>
+    <div className="lg:col-span-8 flex flex-col gap-5">
+      <HighlightedMessage highlights={result.highlights} />
+      <SignalList signals={result.signals} />
+      <ActionPlan verdict={result.verdict} />
     </div>
   </div>
 );
@@ -73,22 +100,7 @@ export const MessagePanel: FC<MessagePanelProps> = ({ check }) => {
         warningShareText={warningText}
         showWarningBtn={result.status === 'ok' && result.verdict !== 'Low risk'}
       />
-      {result.status === 'ok' && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          <div className="lg:col-span-4 flex flex-col gap-4 p-5 rounded-xl border border-sentinel-border bg-white shadow-sm items-center">
-            <RiskGauge score={result.score} verdict={result.verdict} label="Message Risk" />
-            <SeverityPill verdict={result.verdict} size="md" />
-            <div className="w-full mt-2">
-              <ExplainPanel kind="message" score={result.score} verdict={result.verdict} signals={result.signals} />
-            </div>
-          </div>
-          <div className="lg:col-span-8 flex flex-col gap-5">
-            <HighlightedMessage highlights={result.highlights} />
-            <SignalList signals={result.signals} />
-            <ActionPlan verdict={result.verdict} />
-          </div>
-        </div>
-      )}
+      {result.status === 'ok' && <MessageResultsGrid result={result} />}
     </div>
   );
 };

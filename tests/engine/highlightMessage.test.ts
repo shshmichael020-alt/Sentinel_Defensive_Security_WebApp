@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { highlightMessage } from '../../src/engine/highlightMessage';
-import { analyzeMessage } from '../../src/engine/analyzeMessage';
+import { highlightMessage } from '@/engine/highlightMessage';
+import { analyzeMessage } from '@/engine/analyzeMessage';
 
 describe('highlightMessage', () => {
   it('returns empty array on empty input', () => {

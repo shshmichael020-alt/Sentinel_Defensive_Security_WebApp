@@ -44,15 +44,19 @@ function extractSubdomain(rem: string, b: DomainBreakdown, sigs: readonly Signal
   return rem;
 }
 
-function extractDomain(rem: string, url: URL, b: DomainBreakdown, sigs: readonly Signal[], segs: SegmentDef[]): string {
-  const portSuffix = url.port.length > 0 ? `:${url.port}` : '';
-  const domainWithPort = `${b.registrableDomain}${portSuffix}`;
-  const text = rem.startsWith(domainWithPort) ? domainWithPort : b.registrableDomain;
+function extractDomain(
+  rem: string,
+  domainWithPort: string,
+  sigs: readonly Signal[],
+  segs: SegmentDef[],
+): string {
+  const text = rem.startsWith(domainWithPort) ? domainWithPort : domainWithPort.split(':')[0] ?? domainWithPort;
   const flagged = sigs.some((s) => ['brand_lookalike', 'ip_host', 'punycode_idn', 'suspicious_tld', 'url_shortener', 'many_hyphens', 'nonstandard_port'].includes(s.id));
   const reason = findReason(sigs, ['brand_lookalike', 'ip_host', 'punycode_idn', 'suspicious_tld', 'url_shortener', 'nonstandard_port', 'many_hyphens']);
   segs.push({ kind: 'domain', text, flagged, reason });
   return rem.slice(text.length);
 }
+
 
 function extractPathAndQuery(rem: string, sigs: readonly Signal[], segs: SegmentDef[]): void {
   const queryIndex = rem.indexOf('?');
@@ -88,7 +92,8 @@ export function segmentUrl(
   let rem = extractScheme(displayedUrl, signals, segments);
   rem = extractUserinfo(rem, segments);
   rem = extractSubdomain(rem, breakdown, signals, segments);
-  rem = extractDomain(rem, url, breakdown, signals, segments);
+  const portSuffix = url.port.length > 0 ? `:${url.port}` : '';
+  rem = extractDomain(rem, `${breakdown.registrableDomain}${portSuffix}`, signals, segments);
   extractPathAndQuery(rem, signals, segments);
   return segments;
 }

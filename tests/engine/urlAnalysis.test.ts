@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { analyzeUrl } from '../../src/engine/analyzeUrl';
-import { extractDomainBreakdown } from '../../src/engine/urlBrandSignals';
+import { analyzeUrl } from '@/engine/analyzeUrl';
+import { extractDomainBreakdown } from '@/engine/urlBrandSignals';
 
 describe('analyzeUrl', () => {
   it('returns empty status for empty or whitespace inputs', () => {

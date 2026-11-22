@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { analyzeUrl } from '../../src/engine/analyzeUrl';
+import { analyzeUrl } from '@/engine/analyzeUrl';
 
 describe('segmentUrl concatenation invariant', () => {
   const testUrls = [

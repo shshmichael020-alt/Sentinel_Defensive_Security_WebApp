@@ -1,4 +1,4 @@
-import { COMMON_PASSWORDS } from '../constants/commonPasswords';
+import { COMMON_PASSWORDS_SET } from '../constants/commonPasswords';
 import {
   PASSWORD_PENALTIES,
   KEYBOARD_PATTERNS,
@@ -11,6 +11,13 @@ export interface PatternPenaltyResult {
   readonly penalties: readonly string[];
   readonly totalPenaltyBits: number;
 }
+
+const REPEATED_RUN_REGEX = /(.)\1{2,}/;
+const CALENDAR_YEAR_REGEX = /\b(?:19[5-9]\d|20[0-3]\d)\b/;
+const ONLY_LETTERS_REGEX = /^[a-zA-Z]+$/;
+const ONLY_DIGITS_REGEX = /^[0-9]+$/;
+const SUSPICIOUS_WORDS_REGEX = /(?:password|admin|welcome)/i;
+
 
 function checkSequential(pwd: string): boolean {
   const lower = pwd.toLowerCase();
@@ -42,7 +49,7 @@ function countKeyboardRuns(pwd: string): number {
 
 function checkHeuristicRules(pwd: string, penalties: string[]): number {
   let penalty = 0;
-  if (/(.)\1{2,}/.test(pwd)) {
+  if (REPEATED_RUN_REGEX.test(pwd)) {
     penalties.push('Contains repeated character run (3+ identical chars)');
     penalty += PASSWORD_PENALTIES.REPEATED_RUN;
   }
@@ -50,15 +57,15 @@ function checkHeuristicRules(pwd: string, penalties: string[]): number {
     penalties.push('Contains sequential alphabet or digit run');
     penalty += PASSWORD_PENALTIES.SEQUENTIAL_RUN;
   }
-  if (/\b(?:19[5-9]\d|20[0-3]\d)\b/.test(pwd)) {
+  if (CALENDAR_YEAR_REGEX.test(pwd)) {
     penalties.push('Contains calendar year in range 1950-2039');
     penalty += PASSWORD_PENALTIES.YEAR_IN_RANGE;
   }
-  if (/^[a-zA-Z]+$/.test(pwd) || /^[0-9]+$/.test(pwd)) {
+  if (ONLY_LETTERS_REGEX.test(pwd) || ONLY_DIGITS_REGEX.test(pwd)) {
     penalties.push('Only letters or only numbers without character diversity');
     penalty += PASSWORD_PENALTIES.ONLY_LETTERS_OR_DIGITS;
   }
-  if (/(?:password|admin|welcome)/i.test(pwd)) {
+  if (SUSPICIOUS_WORDS_REGEX.test(pwd)) {
     penalties.push('Contains predictable dictionary word (password/admin/welcome)');
     penalty += PASSWORD_PENALTIES.SUSPICIOUS_WORD;
   }
@@ -76,7 +83,7 @@ export function detectPasswordPatterns(password: string): PatternPenaltyResult {
   const lower = password.toLowerCase();
   const normalized = normalizeHomoglyphs(lower);
 
-  const isCommon = COMMON_PASSWORDS.includes(lower) || COMMON_PASSWORDS.includes(normalized);
+  const isCommon = COMMON_PASSWORDS_SET.has(lower) || COMMON_PASSWORDS_SET.has(normalized);
   if (isCommon) {
     penalties.push('Matches known common password list');
     return { isCommon: true, penalties, totalPenaltyBits: 0 };

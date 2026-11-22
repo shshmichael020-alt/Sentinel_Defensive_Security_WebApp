@@ -1,11 +1,27 @@
 import { useReducer, useMemo, type FC } from 'react';
-import type { DrillItem } from '../../types/ui';
-import type { MessageAnalysisResult } from '../../types/analysis';
-import { DRILL_ITEMS } from '../../constants/drills';
-import { drillReducer, INITIAL_DRILL_STATE } from '../../engine/drillReducer';
-import { analyzeMessage } from '../../engine/analyzeMessage';
+import type { DrillItem } from '@/types/ui';
+import type { MessageAnalysisResult } from '@/types/analysis';
+import { DRILL_ITEMS } from '@/constants/drills';
+import { drillReducer, INITIAL_DRILL_STATE } from '@/engine/drillReducer';
+import { analyzeMessage } from '@/engine/analyzeMessage';
 import { SeverityPill } from '../common/SeverityPill';
 import { Award, CheckCircle2, XCircle, ArrowRight, RotateCcw } from 'lucide-react';
+
+const FeedbackFooter: FC<{ readonly onNext: () => void; readonly onReset: () => void }> = ({
+  onNext,
+  onReset,
+}) => (
+  <div className="flex items-center justify-between pt-1">
+    <button type="button" onClick={onReset} className="inline-flex items-center gap-1 text-[11px] font-medium text-sentinel-secondary hover:text-sentinel-ink">
+      <RotateCcw size={11} aria-hidden="true" />
+      <span>Reset Drill</span>
+    </button>
+    <button type="button" onClick={onNext} className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded bg-blue-700 text-white hover:bg-blue-800 transition-colors shadow-sm">
+      <span>Next Drill</span>
+      <ArrowRight size={12} aria-hidden="true" />
+    </button>
+  </div>
+);
 
 const DrillAnswerFeedback: FC<{
   readonly isCorrect: boolean;
@@ -37,18 +53,10 @@ const DrillAnswerFeedback: FC<{
       )}
     </div>
     <p className="text-sentinel-secondary">{item.explanation}</p>
-    <div className="flex items-center justify-between pt-1">
-      <button type="button" onClick={onReset} className="inline-flex items-center gap-1 text-[11px] font-medium text-sentinel-secondary hover:text-sentinel-ink">
-        <RotateCcw size={11} aria-hidden="true" />
-        <span>Reset Drill</span>
-      </button>
-      <button type="button" onClick={onNext} className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded bg-blue-700 text-white hover:bg-blue-800 transition-colors shadow-sm">
-        <span>Next Drill</span>
-        <ArrowRight size={12} aria-hidden="true" />
-      </button>
-    </div>
+    <FeedbackFooter onNext={onNext} onReset={onReset} />
   </div>
 );
+
 
 const DrillQuestionDisplay: FC<{ readonly text: string; readonly currentIdx: number; readonly score: number; readonly total: number }> = ({
   text,

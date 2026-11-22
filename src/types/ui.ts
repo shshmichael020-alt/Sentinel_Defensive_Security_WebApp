@@ -1,6 +1,7 @@
 import type { Verdict } from './severity';
 
-export type TabId = 'link' | 'message' | 'password' | 'learn';
+export const TAB_IDS = ['link', 'message', 'password', 'learn'] as const;
+export type TabId = (typeof TAB_IDS)[number];
 
 export interface Playbook {
   readonly id: string;

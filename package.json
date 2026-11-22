@@ -2,12 +2,26 @@
   "name": "sentinel",
   "private": true,
   "version": "1.0.0",
+  "description": "Sentinel: Zero-knowledge defensive cybersecurity web app for risk detection, prevention, and security awareness.",
+  "license": "MIT",
   "type": "module",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "keywords": [
+    "cybersecurity",
+    "defensive-security",
+    "phishing-detector",
+    "password-analyzer",
+    "security-awareness",
+    "zero-knowledge"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "lint": "eslint . --max-warnings 0",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit"
   },
@@ -25,6 +39,7 @@
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
     "@vitejs/plugin-react": "^4.3.4",
+    "@vitest/coverage-v8": "^3.2.7",
     "autoprefixer": "^10.4.20",
     "eslint": "^9.20.1",
     "eslint-plugin-jsx-a11y": "^6.10.2",

@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import type { Severity, Verdict } from '../types/severity';
 import type { ExplainRequestPayload, ExplainResponsePayload } from '../types/api';
 import { MAX_EXPLAIN_SIGNALS } from '../constants/limits';
@@ -17,14 +17,37 @@ export interface UseExplainResult {
   readonly clearExplanation: () => void;
 }
 
+interface ExplainInput {
+  readonly kind: 'link' | 'message';
+  readonly score: number;
+  readonly verdict: Verdict;
+  readonly signals: readonly { id: string; severity: Severity }[];
+}
+
 const CLIENT_TIMEOUT_MS = 8000;
+
+function prepareExplainPayload(input: ExplainInput): { payload: ExplainRequestPayload; fallbackText: string } {
+  const bounded = input.signals.slice(0, MAX_EXPLAIN_SIGNALS);
+  const fallbackText = generateFallbackExplain(input.kind, input.score, input.verdict, bounded);
+  const payload: ExplainRequestPayload = {
+    kind: input.kind,
+    score: input.score,
+    verdict: input.verdict,
+    signals: bounded.map((s) => ({ id: s.id, severity: s.severity })),
+  };
+  return { payload, fallbackText };
+}
 
 async function fetchExplanation(
   payload: ExplainRequestPayload,
   fallbackText: string,
+  externalSignal: AbortSignal,
 ): Promise<{ text: string; source: 'ai' | 'fallback' }> {
   const controller = new AbortController();
   const timer = setTimeout(() => { controller.abort(); }, CLIENT_TIMEOUT_MS);
+  const onExternalAbort = () => { controller.abort(); };
+  externalSignal.addEventListener('abort', onExternalAbort, { once: true });
+
   try {
     const res = await fetch('/api/explain', {
       method: 'POST',
@@ -39,7 +62,26 @@ async function fetchExplanation(
     return { text: fallbackText, source: 'fallback' };
   } finally {
     clearTimeout(timer);
+    externalSignal.removeEventListener('abort', onExternalAbort);
   }
+}
+
+async function runExplainFetch(input: ExplainInput, signal: AbortSignal): Promise<{ text: string; source: 'ai' | 'fallback' } | null> {
+  const { payload, fallbackText } = prepareExplainPayload(input);
+  const result = await fetchExplanation(payload, fallbackText, signal);
+  return signal.aborted ? null : result;
+}
+
+async function triggerFetch(
+  abortRef: React.MutableRefObject<AbortController | null>,
+  input: ExplainInput,
+  setIsLoading: (v: boolean) => void,
+): Promise<{ text: string; source: 'ai' | 'fallback' } | null> {
+  abortRef.current?.abort();
+  const controller = new AbortController();
+  abortRef.current = controller;
+  setIsLoading(true);
+  return runExplainFetch(input, controller.signal);
 }
 
 /**
@@ -52,33 +94,24 @@ export function useExplain(): UseExplainResult {
   const [explanation, setExplanation] = useState<string | null>(null);
   const [source, setSource] = useState<'ai' | 'fallback' | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const abortRef = useRef<AbortController | null>(null);
+
+  useEffect(() => () => { abortRef.current?.abort(); }, []);
 
   const clearExplanation = useCallback(() => {
+    abortRef.current?.abort();
     setExplanation(null);
     setSource(null);
   }, []);
 
   const requestExplanation = useCallback(
-    async (
-      kind: 'link' | 'message',
-      score: number,
-      verdict: Verdict,
-      signals: readonly { id: string; severity: Severity }[],
-    ): Promise<void> => {
-      setIsLoading(true);
-      const bounded = signals.slice(0, MAX_EXPLAIN_SIGNALS);
-      const fallbackText = generateFallbackExplain(kind, score, verdict, bounded);
-      const payload: ExplainRequestPayload = {
-        kind,
-        score,
-        verdict,
-        signals: bounded.map((s) => ({ id: s.id, severity: s.severity })),
-      };
-
-      const result = await fetchExplanation(payload, fallbackText);
-      setExplanation(result.text);
-      setSource(result.source);
-      setIsLoading(false);
+    async (kind: 'link' | 'message', score: number, verdict: Verdict, signals: readonly { id: string; severity: Severity }[]) => {
+      const res = await triggerFetch(abortRef, { kind, score, verdict, signals }, setIsLoading);
+      if (res) {
+        setExplanation(res.text);
+        setSource(res.source);
+        setIsLoading(false);
+      }
     },
     [],
   );

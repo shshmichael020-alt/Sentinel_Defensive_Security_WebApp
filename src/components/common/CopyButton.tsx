@@ -1,6 +1,6 @@
-import { useState, useCallback, type FC } from 'react';
+import { useState, useCallback, useRef, useEffect, type FC } from 'react';
 import { Copy, Check } from 'lucide-react';
-import { CLIPBOARD_RESET_MS } from '../../constants/limits';
+import { CLIPBOARD_RESET_MS } from '@/constants/limits';
 
 export interface CopyButtonProps {
   readonly textToCopy: string;
@@ -9,23 +9,43 @@ export interface CopyButtonProps {
   readonly className?: string | undefined;
 }
 
+function useClipboardCopy(textToCopy: string) {
+  const [copied, setCopied] = useState<boolean>(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current !== null) {
+        clearTimeout(timerRef.current);
+      }
+    };
+  }, []);
+
+  const handleCopy = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(textToCopy);
+      setCopied(true);
+      if (timerRef.current !== null) {
+        clearTimeout(timerRef.current);
+      }
+      timerRef.current = setTimeout(() => {
+        setCopied(false);
+      }, CLIPBOARD_RESET_MS);
+    } catch {
+      setCopied(false);
+    }
+  }, [textToCopy]);
+
+  return { copied, handleCopy };
+}
+
 export const CopyButton: FC<CopyButtonProps> = ({
   textToCopy,
   label = 'Copy',
   copiedLabel = 'Copied!',
   className = '',
 }) => {
-  const [copied, setCopied] = useState<boolean>(false);
-
-  const handleCopy = useCallback(async () => {
-    try {
-      await navigator.clipboard.writeText(textToCopy);
-      setCopied(true);
-      setTimeout(() => { setCopied(false); }, CLIPBOARD_RESET_MS);
-    } catch {
-      setCopied(false);
-    }
-  }, [textToCopy]);
+  const { copied, handleCopy } = useClipboardCopy(textToCopy);
 
   return (
     <button

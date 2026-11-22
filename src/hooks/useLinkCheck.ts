@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useDeferredValue } from 'react';
 import type { LinkAnalysisResult } from '../types/analysis';
 import { LINK_PRESETS } from '../constants/presets';
 import { analyzeUrl } from '../engine/analyzeUrl';
@@ -20,10 +20,11 @@ const DEFAULT_LINK_INPUT = LINK_PRESETS[0]?.value ?? 'http://paypa1-security-upd
  */
 export function useLinkCheck(initialUrl: string = DEFAULT_LINK_INPUT): UseLinkCheckResult {
   const [input, setInputState] = useState<string>(initialUrl);
+  const deferredInput = useDeferredValue(input);
 
   const result = useMemo<LinkAnalysisResult>(() => {
-    return analyzeUrl(input);
-  }, [input]);
+    return analyzeUrl(deferredInput);
+  }, [deferredInput]);
 
   const setInput = useCallback((value: string) => {
     setInputState(value);

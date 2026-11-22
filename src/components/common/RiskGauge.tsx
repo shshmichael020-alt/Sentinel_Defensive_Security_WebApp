@@ -1,6 +1,6 @@
-import type { FC } from 'react';
-import type { Verdict } from '../../types/severity';
-import { VERDICT_THEME } from '../../constants/theme';
+import { memo, type FC } from 'react';
+import type { Verdict } from '@/types/severity';
+import { VERDICT_THEME } from '@/constants/theme';
 
 export interface RiskGaugeProps {
   readonly score: number;
@@ -30,7 +30,7 @@ const GaugeArc: FC<{ readonly hexText: string; readonly offset: number }> = ({
   </svg>
 );
 
-export const RiskGauge: FC<RiskGaugeProps> = ({ score, verdict }) => {
+export const RiskGauge: FC<RiskGaugeProps> = memo(({ score, verdict }) => {
   const theme = VERDICT_THEME[verdict];
   const clamped = Math.max(0, Math.min(100, score));
   const offset = ARC_LENGTH * (1 - clamped / 100);
@@ -51,4 +51,7 @@ export const RiskGauge: FC<RiskGaugeProps> = ({ score, verdict }) => {
       </div>
     </div>
   );
-};
+});
+
+RiskGauge.displayName = 'RiskGauge';
+

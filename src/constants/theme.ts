@@ -14,7 +14,7 @@ export interface VerdictThemeConfig {
   readonly hexText: string;
 }
 
-export const VERDICT_THEME: Readonly<Record<Verdict, VerdictThemeConfig>> = {
+export const VERDICT_THEME = {
   'Low risk': {
     bgClass: 'bg-[#ECFDF5]',
     textClass: 'text-[#047857]',
@@ -51,11 +51,9 @@ export const VERDICT_THEME: Readonly<Record<Verdict, VerdictThemeConfig>> = {
     hexBg: '#FEF2F2',
     hexText: '#B91C1C',
   },
-};
+} satisfies Readonly<Record<Verdict, VerdictThemeConfig>>;
 
-export const PASSWORD_STRENGTH_THEME: Readonly<
-  Record<PasswordStrengthLabel, VerdictThemeConfig>
-> = {
+export const PASSWORD_STRENGTH_THEME = {
   'Very weak': {
     ...VERDICT_THEME.Dangerous,
     label: 'Very weak',
@@ -76,4 +74,5 @@ export const PASSWORD_STRENGTH_THEME: Readonly<
     ...VERDICT_THEME['Low risk'],
     label: 'Very strong',
   },
-};
+} satisfies Readonly<Record<PasswordStrengthLabel, VerdictThemeConfig>>;
+

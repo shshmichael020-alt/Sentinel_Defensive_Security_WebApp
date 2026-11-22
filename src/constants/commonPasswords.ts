@@ -154,3 +154,6 @@ export const COMMON_PASSWORDS: readonly string[] = [
   'safety12',
   'protect1',
 ];
+
+export const COMMON_PASSWORDS_SET: ReadonlySet<string> = new Set(COMMON_PASSWORDS);
+

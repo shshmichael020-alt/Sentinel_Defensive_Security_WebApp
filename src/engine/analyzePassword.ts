@@ -14,7 +14,7 @@ import {
   ENTROPY_THRESHOLDS,
   STRENGTH_LEVELS,
 } from '../constants/passwordRules';
-import { getCharPool, computeRawEntropy } from './passwordEntropy';
+import { getCharPool, computeRawEntropy, type CharPoolBreakdown } from './passwordEntropy';
 import { detectPasswordPatterns } from './passwordPatterns';
 import { estimateCrackTime } from './crackTime';
 
@@ -40,10 +40,7 @@ function getStrengthLevel(entropy: number): {
 
 function buildChecklist(
   pwd: string,
-  hasLower: boolean,
-  hasUpper: boolean,
-  hasDigits: boolean,
-  hasSymbols: boolean,
+  pool: CharPoolBreakdown,
   isCommon: boolean,
   penalties: readonly string[],
 ): PasswordChecklistItem[] {
@@ -53,12 +50,19 @@ function buildChecklist(
 
   return [
     { id: 'length', label: 'Minimum 12 characters length', passed: pwd.length >= MIN_PASS_CHECK_LENGTH },
-    { id: 'mixed-case', label: 'Includes uppercase and lowercase letters', passed: hasLower && hasUpper },
-    { id: 'digits', label: 'Includes at least one numeric digit', passed: hasDigits },
-    { id: 'symbols', label: 'Includes at least one special symbol', passed: hasSymbols },
+    { id: 'mixed-case', label: 'Includes uppercase and lowercase letters', passed: pool.hasLower && pool.hasUpper },
+    { id: 'digits', label: 'Includes at least one numeric digit', passed: pool.hasDigits },
+    { id: 'symbols', label: 'Includes at least one special symbol', passed: pool.hasSymbols },
     { id: 'not-common', label: 'Not found in common password databases', passed: !isCommon },
     { id: 'no-patterns', label: 'No keyboard walks, repeats, or sequences', passed: !hasPattern },
   ];
+}
+
+function computeEffectiveEntropy(isCommon: boolean, raw: number, penalty: number): number {
+  if (isCommon) {
+    return Math.min(PASSWORD_PENALTIES.COMMON_PASSWORD_CAP, raw);
+  }
+  return Math.max(0, Math.round((raw - penalty) * ENTROPY_DECIMAL_MULTIPLIER) / ENTROPY_DECIMAL_MULTIPLIER);
 }
 
 /**
@@ -76,21 +80,10 @@ export function analyzePassword(input: string): PasswordAnalysisResult {
   const pool = getCharPool(bounded);
   const { isCommon, penalties, totalPenaltyBits } = detectPasswordPatterns(bounded);
 
-  const effectiveEntropy = isCommon
-    ? Math.min(PASSWORD_PENALTIES.COMMON_PASSWORD_CAP, rawEntropy)
-    : Math.max(0, Math.round((rawEntropy - totalPenaltyBits) * ENTROPY_DECIMAL_MULTIPLIER) / ENTROPY_DECIMAL_MULTIPLIER);
-
+  const effectiveEntropy = computeEffectiveEntropy(isCommon, rawEntropy, totalPenaltyBits);
   const { level, label } = getStrengthLevel(effectiveEntropy);
   const crack = estimateCrackTime(effectiveEntropy);
-  const checklist = buildChecklist(
-    bounded,
-    pool.hasLower,
-    pool.hasUpper,
-    pool.hasDigits,
-    pool.hasSymbols,
-    isCommon,
-    penalties,
-  );
+  const checklist = buildChecklist(bounded, pool, isCommon, penalties);
 
   return {
     status: 'ok',

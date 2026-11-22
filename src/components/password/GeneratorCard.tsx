@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import { MIN_GENERATED_LENGTH, MAX_GENERATED_LENGTH } from '../../constants/passwordRules';
+import { MIN_GENERATED_LENGTH, MAX_GENERATED_LENGTH } from '@/constants/passwordRules';
 import { CopyButton } from '../common/CopyButton';
 import { RefreshCw, KeyRound } from 'lucide-react';
 

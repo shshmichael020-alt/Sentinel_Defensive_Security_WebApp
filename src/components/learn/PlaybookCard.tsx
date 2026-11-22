@@ -1,12 +1,12 @@
-import { useState, type FC } from 'react';
-import type { Playbook } from '../../types/ui';
+import { useState, memo, type FC } from 'react';
+import type { Playbook } from '@/types/ui';
 import { ChevronDown, AlertCircle, CheckCircle2 } from 'lucide-react';
 
 export interface PlaybookCardProps {
   readonly playbook: Playbook;
 }
 
-const PlaybookDetail: FC<{ readonly playbook: Playbook }> = ({ playbook }) => (
+const PlaybookDetail: FC<{ readonly playbook: Playbook }> = memo(({ playbook }) => (
   <div className="p-4 pt-1 border-t border-slate-100 flex flex-col gap-3 text-xs text-sentinel-ink bg-slate-50/50 leading-relaxed">
     <div>
       <h4 className="font-semibold text-sentinel-ink mb-1">How it operates:</h4>
@@ -35,9 +35,11 @@ const PlaybookDetail: FC<{ readonly playbook: Playbook }> = ({ playbook }) => (
       </ul>
     </div>
   </div>
-);
+));
 
-export const PlaybookCard: FC<PlaybookCardProps> = ({ playbook }) => {
+PlaybookDetail.displayName = 'PlaybookDetail';
+
+export const PlaybookCard: FC<PlaybookCardProps> = memo(({ playbook }) => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
 
   return (
@@ -63,4 +65,7 @@ export const PlaybookCard: FC<PlaybookCardProps> = ({ playbook }) => {
       {isOpen && <PlaybookDetail playbook={playbook} />}
     </div>
   );
-};
+});
+
+PlaybookCard.displayName = 'PlaybookCard';
+

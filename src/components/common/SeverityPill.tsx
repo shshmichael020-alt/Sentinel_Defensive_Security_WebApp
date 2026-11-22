@@ -1,8 +1,8 @@
-import type { FC } from 'react';
-import type { Verdict } from '../../types/severity';
-import type { PasswordStrengthLabel } from '../../types/password';
-import { VERDICT_THEME, PASSWORD_STRENGTH_THEME } from '../../constants/theme';
-import { ICON_SIZE_SM, ICON_SIZE_MD } from '../../constants/limits';
+import { memo, type FC } from 'react';
+import type { Verdict } from '@/types/severity';
+import type { PasswordStrengthLabel } from '@/types/password';
+import { VERDICT_THEME, PASSWORD_STRENGTH_THEME } from '@/constants/theme';
+import { ICON_SIZE_SM, ICON_SIZE_MD } from '@/constants/limits';
 
 export interface SeverityPillProps {
   readonly verdict?: Verdict | undefined;
@@ -11,7 +11,7 @@ export interface SeverityPillProps {
   readonly size?: 'sm' | 'md' | undefined;
 }
 
-export const SeverityPill: FC<SeverityPillProps> = ({
+export const SeverityPill: FC<SeverityPillProps> = memo(({
   verdict,
   strength,
   customLabel,
@@ -36,4 +36,7 @@ export const SeverityPill: FC<SeverityPillProps> = ({
       <span>{displayText}</span>
     </span>
   );
-};
+});
+
+SeverityPill.displayName = 'SeverityPill';
+

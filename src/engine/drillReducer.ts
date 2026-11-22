@@ -13,6 +13,17 @@ export const INITIAL_DRILL_STATE: DrillState = {
   totalAnswered: 0,
 };
 
+function handleAnswer(state: DrillState, isScam: boolean, correct: boolean): DrillState {
+  if (state.answered) return state;
+  return {
+    ...state,
+    answered: true,
+    selectedAnswer: isScam,
+    score: correct ? state.score + 1 : state.score,
+    totalAnswered: state.totalAnswered + 1,
+  };
+}
+
 /**
  * Pure reducer handling transitions for the Spot-the-Scam awareness drill.
  *
@@ -22,32 +33,18 @@ export const INITIAL_DRILL_STATE: DrillState = {
  */
 export function drillReducer(state: DrillState, action: DrillAction): DrillState {
   switch (action.type) {
-    case 'ANSWER': {
-      if (state.answered) {
-        return state;
-      }
+    case 'ANSWER':
+      return handleAnswer(state, action.isScam, action.correct);
+    case 'NEXT':
       return {
         ...state,
-        answered: true,
-        selectedAnswer: action.isScam,
-        score: action.correct ? state.score + 1 : state.score,
-        totalAnswered: state.totalAnswered + 1,
-      };
-    }
-    case 'NEXT': {
-      const nextIndex = (state.currentIndex + 1) % action.totalItems;
-      return {
-        ...state,
-        currentIndex: nextIndex,
+        currentIndex: (state.currentIndex + 1) % action.totalItems,
         answered: false,
         selectedAnswer: null,
       };
-    }
-    case 'RESET': {
+    case 'RESET':
       return INITIAL_DRILL_STATE;
-    }
-    default: {
+    default:
       return state;
-    }
   }
 }

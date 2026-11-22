@@ -1,12 +1,12 @@
-import type { FC } from 'react';
-import type { UrlSegment } from '../../types/analysis';
+import { memo, type FC } from 'react';
+import type { UrlSegment } from '@/types/analysis';
 import { TriangleAlert, ShieldAlert } from 'lucide-react';
 
 export interface UrlAnatomyProps {
   readonly segments: readonly UrlSegment[];
 }
 
-const SegmentChip: FC<{ readonly segment: UrlSegment }> = ({ segment }) => {
+const SegmentChip: FC<{ readonly segment: UrlSegment }> = memo(({ segment }) => {
   const isCritical = segment.reason === 'dangerous_scheme' || segment.reason === 'brand_lookalike';
   const borderStyle = segment.flagged
     ? isCritical
@@ -34,9 +34,11 @@ const SegmentChip: FC<{ readonly segment: UrlSegment }> = ({ segment }) => {
       </div>
     </div>
   );
-};
+});
 
-export const UrlAnatomy: FC<UrlAnatomyProps> = ({ segments }) => {
+SegmentChip.displayName = 'SegmentChip';
+
+export const UrlAnatomy: FC<UrlAnatomyProps> = memo(({ segments }) => {
   if (segments.length === 0) return null;
 
   return (
@@ -52,4 +54,7 @@ export const UrlAnatomy: FC<UrlAnatomyProps> = ({ segments }) => {
       </div>
     </div>
   );
-};
+});
+
+UrlAnatomy.displayName = 'UrlAnatomy';
+

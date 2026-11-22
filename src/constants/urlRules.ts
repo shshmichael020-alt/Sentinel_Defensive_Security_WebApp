@@ -72,3 +72,10 @@ export const DANGEROUS_SCHEMES: readonly string[] = [
   'file:',
   'vbscript:',
 ];
+
+export const MULTI_PART_SUFFIXES_SET: ReadonlySet<string> = new Set(MULTI_PART_SUFFIXES);
+export const SUSPICIOUS_TLDS_SET: ReadonlySet<string> = new Set(SUSPICIOUS_TLDS);
+export const URL_SHORTENERS_SET: ReadonlySet<string> = new Set(URL_SHORTENERS);
+export const PHISHING_KEYWORDS_SET: ReadonlySet<string> = new Set(PHISHING_KEYWORDS);
+export const DANGEROUS_SCHEMES_SET: ReadonlySet<string> = new Set(DANGEROUS_SCHEMES);
+

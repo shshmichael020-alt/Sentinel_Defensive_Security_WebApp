@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { analyzeMessage } from '../../src/engine/analyzeMessage';
+import { analyzeMessage } from '@/engine/analyzeMessage';
 
 describe('analyzeMessage', () => {
   it('returns empty status for empty input', () => {

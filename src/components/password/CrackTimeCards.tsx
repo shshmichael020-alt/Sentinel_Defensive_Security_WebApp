@@ -1,6 +1,6 @@
-import type { FC } from 'react';
+import { memo, type FC } from 'react';
 import { ShieldCheck, Cpu, Server } from 'lucide-react';
-import { ICON_SIZE_MD } from '../../constants/limits';
+import { ICON_SIZE_MD } from '@/constants/limits';
 
 export interface CrackTimeCardsProps {
   readonly onlineDuration: string;
@@ -17,7 +17,7 @@ interface TierConfig {
   readonly iconClass: string;
 }
 
-const TierCard: FC<{ readonly tier: TierConfig }> = ({ tier }) => {
+const TierCard: FC<{ readonly tier: TierConfig }> = memo(({ tier }) => {
   const Icon = tier.icon;
   return (
     <div className="p-3.5 rounded-lg border border-sentinel-border bg-white flex flex-col gap-1">
@@ -31,42 +31,31 @@ const TierCard: FC<{ readonly tier: TierConfig }> = ({ tier }) => {
       <p className="text-[11px] text-sentinel-secondary">{tier.description}</p>
     </div>
   );
-};
+});
 
-function getTiers(
-  onlineDuration: string,
-  offlineDuration: string,
-  gpuDuration: string,
-): readonly TierConfig[] {
-  return [
-    {
-      id: 'online',
-      title: 'Online Throttled (1,000 / s)',
-      duration: onlineDuration,
-      description: 'Rate-limited web logins & APIs.',
-      icon: ShieldCheck,
-      iconClass: 'text-blue-700',
-    },
-    {
-      id: 'fast-hash',
-      title: 'Offline Fast Hash (10B / s)',
-      duration: offlineDuration,
-      description: 'Single high-speed GPU hash cracking.',
-      icon: Cpu,
-      iconClass: 'text-amber-700',
-    },
-    {
-      id: 'gpu-cluster',
-      title: 'Offline GPU Cluster (100B / s)',
-      duration: gpuDuration,
-      description: 'Dedicated multi-GPU cluster array.',
-      icon: Server,
-      iconClass: 'text-rose-700',
-    },
-  ];
+TierCard.displayName = 'TierCard';
+
+const TIER_TEMPLATES = [
+  { id: 'online', title: 'Online Throttled (1,000 / s)', desc: 'Rate-limited web logins & APIs.', icon: ShieldCheck, cls: 'text-blue-700' },
+  { id: 'fast-hash', title: 'Offline Fast Hash (10B / s)', desc: 'Single high-speed GPU hash cracking.', icon: Cpu, cls: 'text-amber-700' },
+  { id: 'gpu-cluster', title: 'Offline GPU Cluster (100B / s)', desc: 'Dedicated multi-GPU cluster array.', icon: Server, cls: 'text-rose-700' },
+] as const;
+
+function getTiers(on: string, off: string, gpu: string): readonly TierConfig[] {
+  const durations = [on, off, gpu];
+  return TIER_TEMPLATES.map((t, idx) => ({
+    id: t.id,
+    title: t.title,
+    duration: durations[idx] ?? '',
+    description: t.desc,
+    icon: t.icon,
+    iconClass: t.cls,
+  }));
 }
 
-export const CrackTimeCards: FC<CrackTimeCardsProps> = ({
+
+
+export const CrackTimeCards: FC<CrackTimeCardsProps> = memo(({
   onlineDuration,
   offlineDuration,
   gpuDuration,
@@ -80,4 +69,7 @@ export const CrackTimeCards: FC<CrackTimeCardsProps> = ({
       ))}
     </div>
   );
-};
+});
+
+CrackTimeCards.displayName = 'CrackTimeCards';
+

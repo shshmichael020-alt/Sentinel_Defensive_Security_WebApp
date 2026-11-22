@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { ErrorBoundary } from '../../src/components/common/ErrorBoundary';
+import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 
 const BombComponent = (): never => {
   throw new Error('Simulated UI crash for testing');

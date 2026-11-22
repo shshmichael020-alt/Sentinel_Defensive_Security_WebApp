@@ -33,10 +33,11 @@ export default tseslint.config(
     rules: {
       ...reactHooks.configs.recommended.rules,
       ...jsxA11y.configs.recommended.rules,
-      complexity: ['error', 8],
+      complexity: ['error', 7],
       'max-depth': ['error', 3],
-      'max-lines': ['error', { max: 200, skipBlankLines: true, skipComments: true }],
-      'max-lines-per-function': ['error', { max: 40, skipBlankLines: true, skipComments: true }],
+      'max-lines': ['error', { max: 160, skipBlankLines: true, skipComments: true }],
+      'max-lines-per-function': ['error', { max: 30, skipBlankLines: true, skipComments: true }],
+      'max-params': ['error', 4],
       'no-console': 'error',
       'no-magic-numbers': [
         'error',

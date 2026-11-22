@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { levenshtein } from '../../src/engine/levenshtein';
-import { normalizeHomoglyphs } from '../../src/engine/normalizeHomoglyphs';
+import { levenshtein } from '@/engine/levenshtein';
+import { normalizeHomoglyphs } from '@/engine/normalizeHomoglyphs';
 
 describe('levenshtein distance', () => {
   it('returns 0 for identical strings', () => {

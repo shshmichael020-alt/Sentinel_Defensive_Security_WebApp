@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import { PLAYBOOKS } from '../../constants/playbooks';
+import { PLAYBOOKS } from '@/constants/playbooks';
 import { PlaybookCard } from './PlaybookCard';
 import { DrillCard } from './DrillCard';
 import { EmergencyHelp } from './EmergencyHelp';
@@ -34,3 +34,6 @@ export const LearnPanel: FC = () => {
     </div>
   );
 };
+
+export default LearnPanel;
+

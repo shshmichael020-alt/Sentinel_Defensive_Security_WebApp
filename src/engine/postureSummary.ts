@@ -38,6 +38,19 @@ function getPostureSummarySentence(worst: Verdict, checksCount: number): string 
   return 'All evaluated assets meet baseline safety criteria with no active red flags detected.';
 }
 
+function findWorstVerdict(verdicts: readonly Verdict[]): Verdict {
+  let worst: Verdict = 'Low risk';
+  let highest = 0;
+  for (const v of verdicts) {
+    const score = VERDICT_SEVERITY_ORDER[v];
+    if (score > highest) {
+      highest = score;
+      worst = v;
+    }
+  }
+  return worst;
+}
+
 /**
  * Computes overall session security posture based on the worst verdict among analyzed modules.
  *
@@ -54,27 +67,11 @@ export function computeSessionPosture(
   checksRunCount: number,
 ): SessionPosture {
   const verdicts: Verdict[] = [];
-  if (linkVerdict !== null) {
-    verdicts.push(linkVerdict);
-  }
-  if (messageVerdict !== null) {
-    verdicts.push(messageVerdict);
-  }
-  if (passwordLevel !== null) {
-    verdicts.push(mapPasswordLevelToVerdict(passwordLevel));
-  }
+  if (linkVerdict !== null) verdicts.push(linkVerdict);
+  if (messageVerdict !== null) verdicts.push(messageVerdict);
+  if (passwordLevel !== null) verdicts.push(mapPasswordLevelToVerdict(passwordLevel));
 
-  let worstVerdict: Verdict = 'Low risk';
-  let highestSeverity = 0;
-
-  for (const v of verdicts) {
-    const severityScore = VERDICT_SEVERITY_ORDER[v];
-    if (severityScore > highestSeverity) {
-      highestSeverity = severityScore;
-      worstVerdict = v;
-    }
-  }
-
+  const worstVerdict = findWorstVerdict(verdicts);
   const summary = getPostureSummarySentence(worstVerdict, verdicts.length);
 
   return {
@@ -83,3 +80,4 @@ export function computeSessionPosture(
     summary,
   };
 }
+

@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { useLinkCheck } from '../../src/hooks/useLinkCheck';
-import { usePasswordCheck } from '../../src/hooks/usePasswordCheck';
-import { useRovingTabs } from '../../src/hooks/useRovingTabs';
+import { useLinkCheck } from '@/hooks/useLinkCheck';
+import { usePasswordCheck } from '@/hooks/usePasswordCheck';
+import { useRovingTabs } from '@/hooks/useRovingTabs';
 
 describe('useLinkCheck', () => {
   it('initializes with pre-loaded preset and computes result', () => {

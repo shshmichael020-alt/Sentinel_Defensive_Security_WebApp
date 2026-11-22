@@ -1,13 +1,13 @@
-import type { FC } from 'react';
-import type { Verdict } from '../../types/severity';
-import { ACTION_PLAN_STEPS } from '../../constants/copy';
+import { memo, type FC } from 'react';
+import type { Verdict } from '@/types/severity';
+import { ACTION_PLAN_STEPS } from '@/constants/copy';
 import { ShieldAlert, ShieldCheck } from 'lucide-react';
 
 export interface ActionPlanProps {
   readonly verdict: Verdict;
 }
 
-export const ActionPlan: FC<ActionPlanProps> = ({ verdict }) => {
+export const ActionPlan: FC<ActionPlanProps> = memo(({ verdict }) => {
   const steps = ACTION_PLAN_STEPS[verdict];
   const isHighRisk = verdict === 'Dangerous' || verdict === 'Suspicious';
 
@@ -30,4 +30,7 @@ export const ActionPlan: FC<ActionPlanProps> = ({ verdict }) => {
       </ol>
     </div>
   );
-};
+});
+
+ActionPlan.displayName = 'ActionPlan';
+

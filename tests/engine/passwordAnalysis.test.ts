@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { analyzePassword } from '../../src/engine/analyzePassword';
-import { humanizeDuration } from '../../src/engine/crackTime';
+import { analyzePassword } from '@/engine/analyzePassword';
+import { humanizeDuration } from '@/engine/crackTime';
 
 describe('analyzePassword', () => {
   it('returns empty for empty input', () => {

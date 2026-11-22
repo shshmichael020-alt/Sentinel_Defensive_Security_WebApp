@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { App } from '../../src/App';
+import { App } from '@/App';
 
 describe('Sentinel UI Integration Tests', () => {
   beforeEach(() => {
@@ -98,7 +98,7 @@ describe('Sentinel UI Integration Tests', () => {
     const learnTab = screen.getByRole('tab', { name: /learn & emergency/i });
     await user.click(learnTab);
 
-    expect(screen.getByRole('heading', { level: 3, name: /spot the scam drill/i })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 3, name: /spot the scam drill/i })).toBeInTheDocument();
 
     const scamBtn = screen.getByRole('button', { name: /mark as phishing \/ scam/i });
     await user.click(scamBtn);

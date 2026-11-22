@@ -1,6 +1,6 @@
-import type { FC } from 'react';
-import type { Signal } from '../../types/signal';
-import { ZERO_SIGNAL_COPY } from '../../constants/copy';
+import { memo, type FC } from 'react';
+import type { Signal } from '@/types/signal';
+import { ZERO_SIGNAL_COPY } from '@/constants/copy';
 import { SignalItem } from './SignalItem';
 import { ShieldCheck } from 'lucide-react';
 
@@ -8,7 +8,7 @@ export interface SignalListProps {
   readonly signals: readonly Signal[];
 }
 
-export const SignalList: FC<SignalListProps> = ({ signals }) => {
+export const SignalList: FC<SignalListProps> = memo(({ signals }) => {
   if (signals.length === 0) {
     return (
       <div className="flex items-center gap-2.5 p-3.5 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-800 text-sm">
@@ -30,4 +30,7 @@ export const SignalList: FC<SignalListProps> = ({ signals }) => {
       </div>
     </div>
   );
-};
+});
+
+SignalList.displayName = 'SignalList';
+

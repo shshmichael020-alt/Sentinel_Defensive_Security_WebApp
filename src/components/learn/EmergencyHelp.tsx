@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import { EMERGENCY_STEPS, HELPLINE_INDIA, GLOBAL_ADVICE } from '../../constants/emergencyHelp';
+import { EMERGENCY_STEPS, HELPLINE_INDIA, GLOBAL_ADVICE } from '@/constants/emergencyHelp';
 import { OctagonX, PhoneCall, ExternalLink, Globe } from 'lucide-react';
 
 const HelplineCard: FC = () => (

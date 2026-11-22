@@ -1,4 +1,5 @@
-import type { FC } from 'react';
+import { lazy, Suspense, type FC, type KeyboardEvent } from 'react';
+import type { TabId } from './types/ui';
 import type { UseLinkCheckResult } from './hooks/useLinkCheck';
 import type { UseMessageCheckResult } from './hooks/useMessageCheck';
 import type { UsePasswordCheckResult } from './hooks/usePasswordCheck';
@@ -17,8 +18,9 @@ import { TabBar } from './components/layout/TabBar';
 import { LinkPanel } from './components/link/LinkPanel';
 import { MessagePanel } from './components/message/MessagePanel';
 import { PasswordPanel } from './components/password/PasswordPanel';
-import { LearnPanel } from './components/learn/LearnPanel';
 import { Footer } from './components/layout/Footer';
+
+const LearnPanel = lazy(() => import('./components/learn/LearnPanel'));
 
 function getLinkState(c: UseLinkCheckResult) {
   return c.result.status === 'ok'
@@ -41,42 +43,95 @@ function getPasswordState(c: UsePasswordCheckResult) {
   return { label: c.result.label, level: c.result.level, verdict };
 }
 
-export const App: FC = () => {
-  const linkCheck = useLinkCheck();
-  const messageCheck = useMessageCheck();
-  const passwordCheck = usePasswordCheck();
-  const { activeTab, setActiveTab, handleKeyDown } = useRovingTabs('link');
+const LearnSuspense: FC = () => (
+  <Suspense
+    fallback={
+      <div
+        role="status"
+        aria-live="polite"
+        className="p-8 text-center text-sm text-sentinel-secondary flex items-center justify-center gap-2"
+      >
+        <span>Loading educational resources...</span>
+      </div>
+    }
+  >
+    <LearnPanel />
+  </Suspense>
+);
 
+const AppPanels: FC<{
+  readonly activeTab: TabId;
+  readonly linkCheck: UseLinkCheckResult;
+  readonly messageCheck: UseMessageCheckResult;
+  readonly passwordCheck: UsePasswordCheckResult;
+}> = ({ activeTab, linkCheck, messageCheck, passwordCheck }) => (
+  <>
+    {activeTab === 'link' && <LinkPanel check={linkCheck} />}
+    {activeTab === 'message' && <MessagePanel check={messageCheck} />}
+    {activeTab === 'password' && <PasswordPanel check={passwordCheck} />}
+    {activeTab === 'learn' && <LearnSuspense />}
+  </>
+);
+
+const MainArea: FC<{
+  readonly activeTab: TabId;
+  readonly setActiveTab: (tab: TabId) => void;
+  readonly handleKeyDown: (e: KeyboardEvent<HTMLElement>) => void;
+  readonly linkCheck: UseLinkCheckResult;
+  readonly messageCheck: UseMessageCheckResult;
+  readonly passwordCheck: UsePasswordCheckResult;
+}> = ({ activeTab, setActiveTab, handleKeyDown, linkCheck, messageCheck, passwordCheck }) => {
   const link = getLinkState(linkCheck);
   const msg = getMessageState(messageCheck);
   const pwd = getPasswordState(passwordCheck);
   const posture = computeSessionPosture(link.verdict, msg.verdict, pwd.level, TOTAL_APP_CHECKS);
 
   return (
+    <main id="main-content" className="flex-1 max-w-app w-full mx-auto px-4 sm:px-6">
+      <KpiStrip
+        linkScore={link.score}
+        linkVerdict={link.verdict}
+        messageScore={msg.score}
+        messageVerdict={msg.verdict}
+        passwordLabel={pwd.label}
+        passwordVerdict={pwd.verdict}
+        sessionPostureVerdict={posture.worstVerdict}
+        sessionChecksCount={posture.checksRunCount}
+      />
+      <TabBar activeTab={activeTab} onTabChange={setActiveTab} onKeyDown={handleKeyDown} />
+      <AppPanels
+        activeTab={activeTab}
+        linkCheck={linkCheck}
+        messageCheck={messageCheck}
+        passwordCheck={passwordCheck}
+      />
+    </main>
+  );
+};
+
+export const App: FC = () => {
+  const linkCheck = useLinkCheck();
+  const messageCheck = useMessageCheck();
+  const passwordCheck = usePasswordCheck();
+  const { activeTab, setActiveTab, handleKeyDown } = useRovingTabs('link');
+
+  return (
     <div className="min-h-screen bg-sentinel-bg flex flex-col font-sans">
       <SkipLink />
       <Header />
       <PrivacyNote />
-      <main id="main-content" className="flex-1 max-w-app w-full mx-auto px-4 sm:px-6">
-        <KpiStrip
-          linkScore={link.score}
-          linkVerdict={link.verdict}
-          messageScore={msg.score}
-          messageVerdict={msg.verdict}
-          passwordLabel={pwd.label}
-          passwordVerdict={pwd.verdict}
-          sessionPostureVerdict={posture.worstVerdict}
-          sessionChecksCount={posture.checksRunCount}
-        />
-        <TabBar activeTab={activeTab} onTabChange={setActiveTab} onKeyDown={handleKeyDown} />
-        {activeTab === 'link' && <LinkPanel check={linkCheck} />}
-        {activeTab === 'message' && <MessagePanel check={messageCheck} />}
-        {activeTab === 'password' && <PasswordPanel check={passwordCheck} />}
-        {activeTab === 'learn' && <LearnPanel />}
-      </main>
+      <MainArea
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        handleKeyDown={handleKeyDown}
+        linkCheck={linkCheck}
+        messageCheck={messageCheck}
+        passwordCheck={passwordCheck}
+      />
       <Footer />
     </div>
   );
 };
+
 
 export default App;

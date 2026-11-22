@@ -1,6 +1,6 @@
-import type { FC } from 'react';
-import type { Signal } from '../../types/signal';
-import type { Verdict } from '../../types/severity';
+import { memo, type FC } from 'react';
+import type { Signal } from '@/types/signal';
+import type { Verdict } from '@/types/severity';
 import { SeverityPill } from './SeverityPill';
 
 export interface SignalItemProps {
@@ -14,7 +14,7 @@ function mapSeverityToVerdict(severity: Signal['severity']): Verdict {
   return 'Low risk';
 }
 
-export const SignalItem: FC<SignalItemProps> = ({ signal }) => {
+export const SignalItem: FC<SignalItemProps> = memo(({ signal }) => {
   const verdict = mapSeverityToVerdict(signal.severity);
 
   return (
@@ -29,4 +29,7 @@ export const SignalItem: FC<SignalItemProps> = ({ signal }) => {
       <p className="text-xs text-sentinel-secondary leading-relaxed">{signal.advice}</p>
     </div>
   );
-};
+});
+
+SignalItem.displayName = 'SignalItem';
+

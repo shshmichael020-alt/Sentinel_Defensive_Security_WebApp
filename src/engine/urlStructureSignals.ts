@@ -1,25 +1,26 @@
 import type { Signal } from '../types/signal';
 import { SIGNAL_COPY } from '../constants/copy';
 import {
-  URL_LONG_THRESHOLD,
   HYPHENS_EXCESS_THRESHOLD,
-  PERCENT_ENCODED_THRESHOLD,
-  PHISHING_KEYWORD_MEDIUM_COUNT,
   EVIDENCE_MAX_LENGTH,
 } from '../constants/limits';
 import {
-  SUSPICIOUS_TLDS,
-  URL_SHORTENERS,
-  PHISHING_KEYWORDS,
-  DANGEROUS_SCHEMES,
+  SUSPICIOUS_TLDS_SET,
+  URL_SHORTENERS_SET,
+  DANGEROUS_SCHEMES_SET,
 } from '../constants/urlRules';
+import { extractUrlEncodingSignals } from './urlEncodingSignals';
+
+const IPV4_REGEX = /^(?:\d{1,3}\.){3}\d{1,3}$/;
+const IDN_REGEX = /[\u0080-\uFFFF]/;
+const SANITIZE_WHITESPACE_REGEX = /[\r\n\t]/g;
 
 function sanitizeEvidence(text: string): string {
-  return text.slice(0, EVIDENCE_MAX_LENGTH).replace(/[\r\n\t]/g, ' ');
+  return text.slice(0, EVIDENCE_MAX_LENGTH).replace(SANITIZE_WHITESPACE_REGEX, ' ');
 }
 
 function checkSchemeSignals(url: URL, signals: Signal[]): boolean {
-  if (DANGEROUS_SCHEMES.includes(url.protocol.toLowerCase())) {
+  if (DANGEROUS_SCHEMES_SET.has(url.protocol.toLowerCase())) {
     signals.push({
       id: 'dangerous_scheme',
       severity: 'critical',
@@ -42,7 +43,7 @@ function checkSchemeSignals(url: URL, signals: Signal[]): boolean {
 }
 
 function checkHostIpPunycode(host: string, signals: Signal[]): void {
-  const isIpv4 = /^(?:\d{1,3}\.){3}\d{1,3}$/.test(host);
+  const isIpv4 = IPV4_REGEX.test(host);
   const isIpv6 = host.startsWith('[') && host.endsWith(']');
   if (isIpv4 || isIpv6) {
     signals.push({
@@ -53,7 +54,7 @@ function checkHostIpPunycode(host: string, signals: Signal[]): void {
       advice: SIGNAL_COPY.ip_host.advice,
     });
   }
-  if (host.includes('xn--') || /[\u0080-\uFFFF]/.test(host)) {
+  if (host.includes('xn--') || IDN_REGEX.test(host)) {
     signals.push({
       id: 'punycode_idn',
       severity: 'high',
@@ -87,27 +88,7 @@ function checkHostCredentials(url: URL, signals: Signal[]): void {
   }
 }
 
-function checkDomainAndPortSignals(url: URL, signals: Signal[]): void {
-  const host = url.hostname.toLowerCase();
-  const tld = host.split('.').pop() ?? '';
-  if (SUSPICIOUS_TLDS.includes(tld)) {
-    signals.push({
-      id: 'suspicious_tld',
-      severity: 'medium',
-      label: SIGNAL_COPY.suspicious_tld.label,
-      evidence: sanitizeEvidence(`TLD .${tld}`),
-      advice: SIGNAL_COPY.suspicious_tld.advice,
-    });
-  }
-  if (URL_SHORTENERS.includes(host)) {
-    signals.push({
-      id: 'url_shortener',
-      severity: 'medium',
-      label: SIGNAL_COPY.url_shortener.label,
-      evidence: sanitizeEvidence(`Shortener domain: ${host}`),
-      advice: SIGNAL_COPY.url_shortener.advice,
-    });
-  }
+function checkPortSignal(url: URL, signals: Signal[]): void {
   if (url.port !== '' && url.port !== '80' && url.port !== '443') {
     signals.push({
       id: 'nonstandard_port',
@@ -119,52 +100,30 @@ function checkDomainAndPortSignals(url: URL, signals: Signal[]): void {
   }
 }
 
-function checkPathKeywords(url: URL, signals: Signal[]): void {
-  const combinedHostPath = (url.hostname + url.pathname).toLowerCase();
-  const matchedKeywords = PHISHING_KEYWORDS.filter((kw) => combinedHostPath.includes(kw));
-  if (matchedKeywords.length > 0) {
-    const isMedium = matchedKeywords.length >= PHISHING_KEYWORD_MEDIUM_COUNT;
+function checkDomainAndPortSignals(url: URL, signals: Signal[]): void {
+  const host = url.hostname.toLowerCase();
+  const tld = host.split('.').pop() ?? '';
+  if (SUSPICIOUS_TLDS_SET.has(tld)) {
     signals.push({
-      id: 'phishing_keywords',
-      severity: isMedium ? 'medium' : 'low',
-      label: SIGNAL_COPY.phishing_keywords.label,
-      evidence: sanitizeEvidence(`Keywords: ${matchedKeywords.join(', ')}`),
-      advice: SIGNAL_COPY.phishing_keywords.advice,
+      id: 'suspicious_tld',
+      severity: 'medium',
+      label: SIGNAL_COPY.suspicious_tld.label,
+      evidence: sanitizeEvidence(`TLD .${tld}`),
+      advice: SIGNAL_COPY.suspicious_tld.advice,
     });
   }
+  if (URL_SHORTENERS_SET.has(host)) {
+    signals.push({
+      id: 'url_shortener',
+      severity: 'medium',
+      label: SIGNAL_COPY.url_shortener.label,
+      evidence: sanitizeEvidence(`Shortener domain: ${host}`),
+      advice: SIGNAL_COPY.url_shortener.advice,
+    });
+  }
+  checkPortSignal(url, signals);
 }
 
-function checkEncodingAndRedirect(url: URL, fullUrl: string, signals: Signal[]): void {
-  if (fullUrl.length > URL_LONG_THRESHOLD) {
-    signals.push({
-      id: 'long_url',
-      severity: 'low',
-      label: SIGNAL_COPY.long_url.label,
-      evidence: sanitizeEvidence(`Length: ${String(fullUrl.length)} chars`),
-      advice: SIGNAL_COPY.long_url.advice,
-    });
-  }
-  const percentMatches = fullUrl.match(/%[0-9a-fA-F]{2}/g) ?? [];
-  if (percentMatches.length >= PERCENT_ENCODED_THRESHOLD) {
-    signals.push({
-      id: 'encoded_obfuscation',
-      severity: 'low',
-      label: SIGNAL_COPY.encoded_obfuscation.label,
-      evidence: sanitizeEvidence(`${String(percentMatches.length)} encoded sequences`),
-      advice: SIGNAL_COPY.encoded_obfuscation.advice,
-    });
-  }
-  const queryStr = url.search.toLowerCase();
-  if (queryStr.includes('http://') || queryStr.includes('https://')) {
-    signals.push({
-      id: 'embedded_redirect',
-      severity: 'medium',
-      label: SIGNAL_COPY.embedded_redirect.label,
-      evidence: sanitizeEvidence('Query contains nested http/https target'),
-      advice: SIGNAL_COPY.embedded_redirect.advice,
-    });
-  }
-}
 
 /**
  * Evaluates structural and protocol-level risk signals of a URL.
@@ -182,7 +141,6 @@ export function extractUrlStructureSignals(url: URL, originalOrNormalized: strin
   checkHostIpPunycode(host, signals);
   checkHostCredentials(url, signals);
   checkDomainAndPortSignals(url, signals);
-  checkEncodingAndRedirect(url, originalOrNormalized, signals);
-  checkPathKeywords(url, signals);
-  return signals;
+  const encodingSignals = extractUrlEncodingSignals(url, originalOrNormalized);
+  return [...signals, ...encodingSignals];
 }

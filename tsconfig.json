@@ -17,6 +17,10 @@
     "noImplicitOverride": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    },
     "types": ["@testing-library/jest-dom/vitest"]
   },
   "include": ["src", "api", "tests", "vite.config.ts"]

@@ -1,7 +1,7 @@
 import type { FC, KeyboardEvent, ComponentType } from 'react';
 import type { LucideProps } from 'lucide-react';
 import { Link2, MessageSquareWarning, KeyRound, BookOpen } from 'lucide-react';
-import type { TabId } from '../../types/ui';
+import type { TabId } from '@/types/ui';
 
 export interface TabBarProps {
   readonly activeTab: TabId;

@@ -1,14 +1,15 @@
 import type { SignalId } from '../types/signal';
+import type { Verdict } from '../types/severity';
 import { URL_SIGNAL_COPY, type SignalCopyItem } from './copy.link';
 import { MESSAGE_SIGNAL_COPY } from './copy.message';
 
 export const ZERO_SIGNAL_COPY =
   'No known red flags found. Still verify through an official channel.';
 
-export const SIGNAL_COPY: Readonly<Record<SignalId, SignalCopyItem>> = {
+export const SIGNAL_COPY = {
   ...URL_SIGNAL_COPY,
   ...MESSAGE_SIGNAL_COPY,
-};
+} satisfies Readonly<Record<SignalId, SignalCopyItem>>;
 
 export const ACTION_PLAN_STEPS = {
   'Low risk': [
@@ -31,4 +32,5 @@ export const ACTION_PLAN_STEPS = {
     'If credentials or OTP were entered, immediately notify your bank to freeze cards or UPI.',
     'Preserve screenshots and transaction details, then report to cybercrime authorities.',
   ],
-} as const;
+} satisfies Readonly<Record<Verdict, readonly string[]>>;
+

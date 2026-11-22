@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useDeferredValue } from 'react';
 import type { MessageAnalysisResult } from '../types/analysis';
 import { MESSAGE_PRESETS } from '../constants/presets';
 import { analyzeMessage } from '../engine/analyzeMessage';
@@ -22,10 +22,11 @@ const DEFAULT_MESSAGE_INPUT =
  */
 export function useMessageCheck(initialText: string = DEFAULT_MESSAGE_INPUT): UseMessageCheckResult {
   const [input, setInputState] = useState<string>(initialText);
+  const deferredInput = useDeferredValue(input);
 
   const result = useMemo<MessageAnalysisResult>(() => {
-    return analyzeMessage(input);
-  }, [input]);
+    return analyzeMessage(deferredInput);
+  }, [deferredInput]);
 
   const setInput = useCallback((value: string) => {
     setInputState(value);

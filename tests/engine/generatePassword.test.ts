@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { generatePassword } from '../../src/engine/generatePassword';
-import { AMBIGUOUS_CHARS } from '../../src/constants/passwordRules';
+import { generatePassword } from '@/engine/generatePassword';
+import { AMBIGUOUS_CHARS } from '@/constants/passwordRules';
 
 describe('generatePassword', () => {
   it('generates password of requested length', () => {

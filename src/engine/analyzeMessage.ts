@@ -9,6 +9,7 @@ import {
   mapLinkVerdictToSeverity,
   applyPressureCombo,
 } from './messageSignals';
+import { findMessageMatches } from './findMessageMatches';
 import { combineRisk } from './combineRisk';
 import { getVerdictFromScore } from './verdict';
 import { highlightMessage } from './highlightMessage';
@@ -57,13 +58,14 @@ export function analyzeMessage(input: string): MessageAnalysisResult {
   const foundUrls = extractUrls(bounded);
   const { signals: linkSignals, riskyUrls } = analyzeEmbeddedLinks(foundUrls);
 
-  const categorySignals = extractMessageCategorySignals(bounded);
+  const scan = findMessageMatches(bounded);
+  const categorySignals = extractMessageCategorySignals(bounded, scan);
   const rawSignals = [...categorySignals, ...linkSignals];
   const finalSignals = applyPressureCombo(rawSignals);
 
   const score = combineRisk(finalSignals);
   const verdict = getVerdictFromScore(score);
-  const highlights = highlightMessage(bounded, riskyUrls);
+  const highlights = highlightMessage(bounded, riskyUrls, scan.spans);
 
   return {
     status: 'ok',

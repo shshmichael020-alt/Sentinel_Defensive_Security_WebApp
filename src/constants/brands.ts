@@ -31,3 +31,8 @@ export const BRANDS: readonly BrandEntry[] = [
   { name: 'Income Tax India', token: 'incometax', officialDomains: ['incometax.gov.in'] },
   { name: 'UIDAI Aadhaar', token: 'uidai', officialDomains: ['uidai.gov.in'] },
 ];
+
+export const OFFICIAL_DOMAIN_TO_BRAND: ReadonlyMap<string, BrandEntry> = new Map(
+  BRANDS.flatMap((b) => b.officialDomains.map((d) => [d, b] as const)),
+);
+
