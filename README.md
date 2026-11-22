@@ -2,7 +2,7 @@
 
 Sentinel is a zero-harm, client-first personal security web app built to protect people and data from threats.
 
-Live Deployment: `https://sentinel-defensive-security-webapp.vercel.app/` (Placeholder)
+Live Deployment: `https://sentinel-defensive-security-webapp.vercel.app/`
 
 ## Alignment with Problem Statement
 - **Link Check (Detect + Prevent):** Static analysis of suspicious/phishing URLs, homoglyphs, and brand lookalikes without visiting destinations.
